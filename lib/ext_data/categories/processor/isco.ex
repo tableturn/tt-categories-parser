@@ -18,14 +18,12 @@ defmodule ExtData.Categories.Processor.ISCO do
       {:error, e}
   end
 
-  defp parse(%{ "id"=> id, "name" => name} = cat) do
+  defp parse(%{"id" => id, "name" => name} = cat) do
     children =
-    cat
-    |> Map.get("children", [])
-    |> Enum.map(&parse/1)
+      cat
+      |> Map.get("children", [])
+      |> Enum.map(&parse/1)
 
     %Category{id: id, name: name, children: children}
-
-
   end
 end

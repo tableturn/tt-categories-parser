@@ -6,7 +6,8 @@ defmodule ExtData.Categories do
   alias ExtData.Category
   alias ExtData.Categories.Processor
 
-  @parsers %{gics: Processor.GICS, isco: Processor.ISCO, tableturn: Processor.Tableturn}
+  @parsers [:gics, :isco, :tableturn]
+  @parsers_impl %{gics: Processor.GICS, isco: Processor.ISCO, tableturn: Processor.Tableturn}
 
   @spec process_file(module, Path.t) :: Category.t
   def process_file(parser, path) do
@@ -15,8 +16,8 @@ defmodule ExtData.Categories do
   end
 
   @spec process(module, binary) :: Category.t()
-  def process(parser, data) when parser in [:gics] do
-    @parsers
+  def process(parser, data) when parser in @parsers do
+    @parsers_impl
     |> Map.get(parser)
     |> Processor.process!(data)
   end

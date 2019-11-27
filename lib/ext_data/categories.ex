@@ -6,7 +6,7 @@ defmodule ExtData.Categories do
   alias ExtData.Category
   alias ExtData.Categories.Processor
 
-  @parsers %{gics: Processor.GICS}
+  @parsers %{gics: Processor.GICS, isco: Processor.ISCO}
 
   @spec process(module, binary) :: [Category.t()]
   def process(parser, data) when parser in [:gics] do

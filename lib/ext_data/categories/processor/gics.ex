@@ -22,14 +22,17 @@ defmodule ExtData.Categories.Processor.GICS do
   defstruct [:name, :description, :children]
 
   @impl Processor
-  @spec process(binary) :: {:ok, [Category.t()]} | {:error, term}
+  @spec process(binary) :: {:ok, Category.t()} | {:error, term}
   def process(data) do
+    children =
     data
     |> Jason.decode!()
     |> Enum.reduce(%@me{children: %{}}, &parentify/2)
     |> Map.get(:children)
     |> normalize()
-    |> (&{:ok, &1}).()
+
+    {:ok, %Category{name: "GICS", children: children}}
+
   rescue
     e in [Jason.DecodeError] ->
       {:error, e}
@@ -86,7 +89,7 @@ defmodule ExtData.Categories.Processor.GICS do
   defp normalize(nodes) do
     nodes
     |> Enum.map(fn {id, %{name: name, children: children}} ->
-      %Category{id: id, name: name, readonly: false, children: normalize(children)}
+      %Category{id: id, name: name, children: normalize(children)}
     end)
   end
 end

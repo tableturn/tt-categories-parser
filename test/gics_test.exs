@@ -5,8 +5,8 @@ defmodule ExtData.GicsTest do
 
   describe ".process" do
     test "invalid json" do
-        ret = GICS.process("{")
-        assert {:error, %Jason.DecodeError{data: "{", position: 1, token: nil}} = ret
+      ret = GICS.process("{")
+      assert {:error, %Jason.DecodeError{data: "{", position: 1, token: nil}} = ret
     end
 
     @gics1 """
@@ -21,22 +21,28 @@ defmodule ExtData.GicsTest do
     """
     test "category + sub-category" do
       ret = GICS.process(@gics1)
+
       assert {:ok,
-      [
-        %ExtData.Category{
-          children: [
-            %ExtData.Category{
-              children: [],
-              id: "1010",
-              name: "Energy",
-              readonly: false
-            }
-          ],
-          id: "10",
-          name: "Energy",
-          readonly: false
-        }
-      ]} = ret
+              %ExtData.Category{
+                children: [
+                  %ExtData.Category{
+                    children: [
+                      %ExtData.Category{
+                        children: [],
+                        id: "1010",
+                        name: "Energy",
+                        readonly: false
+                      }
+                    ],
+                    id: "10",
+                    name: "Energy",
+                    readonly: false
+                  }
+                ],
+                id: nil,
+                name: "GICS",
+                readonly: false
+              }} = ret
     end
   end
 end

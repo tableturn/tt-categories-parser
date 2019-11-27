@@ -3,9 +3,9 @@ defmodule ExtData.Categories.Processor do
 
   alias ExtData.Category
 
-  @callback process(binary) :: {:ok, [Category.t()]} | {:error, term}
+  @callback process(binary) :: {:ok, Category.t()} | {:error, term}
 
-  @spec process!(module, binary) :: [Category.t()]
+  @spec process!(module, binary) :: Category.t()
   def process!(impl, data) do
     impl
     |> apply(:process, [data])

@@ -7,7 +7,7 @@ defmodule ExtData.Categories.Processor.ISCO do
   @behaviour Processor
 
   @impl Processor
-  @spec process(binary) :: {:ok, [Category.t()]} | {:error, term}
+  @spec process(binary) :: {:ok, Category.t()} | {:error, term}
   def process(data) do
     data
     |> Jason.decode!()

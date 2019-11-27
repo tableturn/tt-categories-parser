@@ -1,11 +1,14 @@
-defmodule Categories.Processor do
+defmodule ExtData.Categories.Processor do
   @moduledoc false
 
-  @callback process() :: {:ok, [Category.t()]} | {:error, String.t()}
+  alias ExtData.Category
 
-  @spec process!(any) :: [Category.t()]
-  def process!(impl) do
-    impl.process
+  @callback process(binary) :: {:ok, [Category.t()]} | {:error, term}
+
+  @spec process!(module, binary) :: [Category.t()]
+  def process!(impl, data) do
+    impl
+    |> apply(:process, [data])
     |> case do
       {:ok, data} -> data
       {:error, error} -> raise ArgumentError, "parsing error: #{error}"

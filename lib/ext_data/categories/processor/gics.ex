@@ -1,7 +1,9 @@
-alias Categories.Processor
-
-defmodule Categories.Processor.GICS do
+defmodule ExtData.Categories.Processor.GICS do
   @moduledoc false
+
+  alias ExtData.Categories.Processor
+  alias ExtData.Category
+
   @behaviour Processor
   @me __MODULE__
 
@@ -20,14 +22,17 @@ defmodule Categories.Processor.GICS do
   defstruct [:name, :description, :children]
 
   @impl Processor
-  @spec process() :: {:ok, [Category.t()]}
-  def process() do
-    "definitions/gics.json"
-    |> Categories.Processor.parse_json!()
+  @spec process(binary) :: {:ok, [Category.t()]} | {:error, term}
+  def process(data) do
+    data
+    |> Jason.decode!()
     |> Enum.reduce(%@me{children: %{}}, &parentify/2)
     |> Map.get(:children)
     |> normalize()
     |> (&{:ok, &1}).()
+  rescue
+    e in [Jason.DecodeError] ->
+      {:error, e}
   end
 
   @spec parentify({id, json_item}, t) :: t

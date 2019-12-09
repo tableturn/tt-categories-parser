@@ -9,20 +9,20 @@ defmodule ExtData.Categories.Processor.ISCO do
   @impl Processor
   @spec process(binary) :: {:ok, Category.t()} | {:error, term}
   def process(data) do
-    data
-    |> Jason.decode!()
-    |> parse()
-    |> (&{:ok, &1}).()
+    {:ok,
+     data
+     |> Jason.decode!()
+     |> normalize()}
   rescue
-    e in [Jason.DecodeError] ->
-      {:error, e}
+    e in [Jason.DecodeError] -> {:error, e}
   end
 
-  defp parse(%{"id" => id, "name" => name} = cat) do
+  @spec normalize(term) :: Category.t()
+  def normalize(%{"id" => id, "name" => name} = node) do
     children =
-      cat
+      node
       |> Map.get("children", [])
-      |> Enum.map(&parse/1)
+      |> Enum.map(&normalize/1)
 
     %Category{id: id, name: name, children: children}
   end

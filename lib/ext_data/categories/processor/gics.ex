@@ -53,7 +53,7 @@ defmodule ExtData.Categories.Processor.GICS do
   @spec deep_put_at(t, [id], {name, description}) :: t
   defp deep_put_at(%@me{} = node, [at], {name, desc}) do
     child = %@me{name: name, description: desc, children: %{}}
-    %@me{node | name: name, children: Map.put(node.children, at, child)}
+    %@me{node | id: at, name: name, children: Map.put(node.children, at, child)}
   end
 
   defp deep_put_at(%@me{} = node, [at | rest], data) do

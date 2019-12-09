@@ -15,27 +15,26 @@ defmodule ExtData.Categories.Processor.GICS do
   @typep json_item :: %{String.t() => %{}}
 
   @typep t :: %__MODULE__{
+           id: id,
            name: name,
            description: description,
            children: children
          }
-  defstruct [:name, :description, :children]
+  defstruct [:id, :name, :description, :children]
 
   @impl Processor
   @spec process(binary) :: {:ok, Category.t()} | {:error, term}
   def process(data) do
     children =
-    data
-    |> Jason.decode!()
-    |> Enum.reduce(%@me{children: %{}}, &parentify/2)
-    |> Map.get(:children)
-    |> normalize()
+      data
+      |> Jason.decode!()
+      |> Enum.reduce(%@me{children: %{}}, &parentify/2)
+      |> Map.get(:children)
+      |> normalize()
 
     {:ok, %Category{name: "GICS", children: children}}
-
   rescue
-    e in [Jason.DecodeError] ->
-      {:error, e}
+    e in [Jason.DecodeError] -> {:error, e}
   end
 
   @spec parentify({id, json_item}, t) :: t
@@ -46,18 +45,18 @@ defmodule ExtData.Categories.Processor.GICS do
     do: do_parentify(id, name, nil, root)
 
   @spec do_parentify(id, name, description, t) :: t
-  defp do_parentify(id, name, desc, root) do
-    root
-    |> we_put_in(pathify(id), {name, desc})
-  end
+  defp do_parentify(id, name, desc, root),
+    do:
+      root
+      |> deep_put_at(pathify(id), {name, desc})
 
-  @spec we_put_in(t, [id], {name, description}) :: t
-  defp we_put_in(%@me{} = node, [at], {name, desc}) do
+  @spec deep_put_at(t, [id], {name, description}) :: t
+  defp deep_put_at(%@me{} = node, [at], {name, desc}) do
     child = %@me{name: name, description: desc, children: %{}}
-    %@me{node | children: Map.put(node.children, at, child)}
+    %@me{node | name: name, children: Map.put(node.children, at, child)}
   end
 
-  defp we_put_in(%@me{} = node, [at | rest], data) do
+  defp deep_put_at(%@me{} = node, [at | rest], data) do
     child =
       node
       |> Map.get(:children)
@@ -66,7 +65,7 @@ defmodule ExtData.Categories.Processor.GICS do
     children =
       node
       |> Map.get(:children)
-      |> Map.put(at, we_put_in(child, rest, data))
+      |> Map.put(at, deep_put_at(child, rest, data))
 
     %{node | children: children}
   end
@@ -76,20 +75,16 @@ defmodule ExtData.Categories.Processor.GICS do
     id
     |> String.length()
     |> case do
-      0 ->
-        path
-
-      x ->
-        next_id = String.slice(id, 0, x - 2)
-        pathify(next_id, [id] ++ path)
+      0 -> path
+      x -> id |> String.slice(0, x - 2) |> pathify([id] ++ path)
     end
   end
 
   @spec normalize({String.t(), %{id => t}}) :: [Category.t()]
-  defp normalize(nodes) do
-    nodes
-    |> Enum.map(fn {id, %{name: name, children: children}} ->
-      %Category{id: id, name: name, children: normalize(children)}
-    end)
-  end
+  defp normalize(nodes),
+    do:
+      nodes
+      |> Enum.map(fn {id, %{name: name, children: children}} ->
+        %Category{id: id, name: name, children: normalize(children)}
+      end)
 end

@@ -11,11 +11,23 @@ defmodule ExtData.GicsTest do
 
     @gics1 """
     {
-      "10": {
-        "name": "Energy"
+      "2020": {
+        "name": "2.2"
       },
       "1010": {
-        "name": "Energy"
+        "name": "1.1"
+      },
+      "10": {
+        "name": "1"
+      },
+      "2010": {
+        "name": "2.1"
+      },
+      "20": {
+        "name": "2"
+      },
+      "201010": {
+        "name": "2.1.1"
       }
     }
     """
@@ -24,24 +36,50 @@ defmodule ExtData.GicsTest do
 
       assert {:ok,
               %ExtData.Category{
+                id: "00",
+                name: "GICS",
+                readonly: false,
                 children: [
                   %ExtData.Category{
+                    id: "10",
+                    name: "1",
+                    readonly: false,
                     children: [
                       %ExtData.Category{
-                        children: [],
                         id: "1010",
-                        name: "Energy",
-                        readonly: false
+                        name: "1.1",
+                        readonly: false,
+                        children: []
                       }
-                    ],
-                    id: "10",
-                    name: "Energy",
-                    readonly: false
+                    ]
+                  },
+                  %ExtData.Category{
+                    id: "20",
+                    name: "2",
+                    readonly: false,
+                    children: [
+                      %ExtData.Category{
+                        id: "2010",
+                        name: "2.1",
+                        readonly: false,
+                        children: [
+                          %ExtData.Category{
+                            id: "201010",
+                            name: "2.1.1",
+                            readonly: false,
+                            children: []
+                          }
+                        ]
+                      },
+                      %ExtData.Category{
+                        id: "2020",
+                        name: "2.2",
+                        readonly: false,
+                        children: []
+                      }
+                    ]
                   }
-                ],
-                id: nil,
-                name: "GICS",
-                readonly: false
+                ]
               }} = ret
     end
   end

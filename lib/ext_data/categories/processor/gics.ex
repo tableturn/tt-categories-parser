@@ -25,14 +25,13 @@ defmodule ExtData.Categories.Processor.GICS do
   @impl Processor
   @spec process(binary) :: {:ok, Category.t()} | {:error, term}
   def process(data) do
-    children =
+    {
+      :ok,
       data
       |> Jason.decode!()
-      |> Enum.reduce(%@me{children: %{}}, &parentify/2)
-      |> Map.get(:children)
-      |> normalize()
-
-    {:ok, %Category{name: "GICS", children: children}}
+      |> Enum.reduce(%@me{id: "00", name: "GICS", children: %{}}, &parentify/2)
+      |> normalize
+    }
   rescue
     e in [Jason.DecodeError] -> {:error, e}
   end
@@ -48,26 +47,30 @@ defmodule ExtData.Categories.Processor.GICS do
   defp do_parentify(id, name, desc, root),
     do:
       root
-      |> deep_put_at(pathify(id), {name, desc})
+      |> deep_put_at(pathify(id), {id, name, desc})
 
-  @spec deep_put_at(t, [id], {name, description}) :: t
-  defp deep_put_at(%@me{} = node, [at], {name, desc}) do
-    child = %@me{name: name, description: desc, children: %{}}
-    %@me{node | id: at, name: name, children: Map.put(node.children, at, child)}
+  @spec deep_put_at(t, [id], {id, name, description}) :: t
+  defp deep_put_at(%@me{children: children} = node, [_], {id, name, desc}) do
+    child = Map.get(children, id, %@me{children: %{}})
+
+    %@me{
+      node
+      | children:
+          Map.put(children, id, %{
+            child
+            | id: id,
+              name: name,
+              description: desc
+          })
+    }
   end
 
-  defp deep_put_at(%@me{} = node, [at | rest], data) do
+  defp deep_put_at(%@me{children: children} = node, [at | rest], data) do
     child =
-      node
-      |> Map.get(:children)
+      children
       |> Map.get(at, %@me{children: %{}})
 
-    children =
-      node
-      |> Map.get(:children)
-      |> Map.put(at, deep_put_at(child, rest, data))
-
-    %{node | children: children}
+    %{node | children: Map.put(children, at, deep_put_at(child, rest, data))}
   end
 
   @spec pathify(String.t(), [String.t()]) :: [String.t()]
@@ -80,11 +83,13 @@ defmodule ExtData.Categories.Processor.GICS do
     end
   end
 
-  @spec normalize({String.t(), %{id => t}}) :: [Category.t()]
-  defp normalize(nodes),
-    do:
-      nodes
-      |> Enum.map(fn {id, %{name: name, children: children}} ->
-        %Category{id: id, name: name, children: normalize(children)}
-      end)
+  def normalize(%@me{id: id} = node),
+    do: normalize({id, node})
+
+  def normalize({id, %{id: id, name: name, children: children}}),
+    do: %Category{
+      id: id,
+      name: name,
+      children: Enum.map(children, &normalize/1)
+    }
 end

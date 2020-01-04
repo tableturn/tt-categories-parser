@@ -26,4 +26,8 @@ defmodule ExtData.Categories.Processor.ISCO do
          readonly: false,
          children: Enum.map(children, &normalize/1)
        }
+
+  defp normalize(%{"id" => id, "name" => name} = attrs)
+       when is_binary(id) and is_binary(name),
+       do: attrs |> Map.put("children", []) |> normalize()
 end

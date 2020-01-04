@@ -9,11 +9,9 @@ defmodule ExtData.Categories do
   @parsers [:gics, :isco, :tableturn]
   @parsers_impl %{gics: Processor.GICS, isco: Processor.ISCO, tableturn: Processor.Tableturn}
 
-  @spec process_file(module, Path.t) :: Category.t
-  def process_file(parser, path) do
-    data = File.read!(path)
-    process(parser, data)
-  end
+  @spec process_file(module, Path.t()) :: Category.t()
+  def process_file(parser, path),
+    do: process(parser, File.read!(path))
 
   @spec process(module, binary) :: Category.t()
   def process(parser, data) when parser in @parsers do

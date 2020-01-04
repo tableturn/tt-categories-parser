@@ -7,7 +7,6 @@ defmodule ExtData.Categories.Processor.ISCO do
   @behaviour Processor
 
   @impl Processor
-  @spec process(binary) :: {:ok, Category.t()} | {:error, term}
   def process(data) do
     {:ok,
      data
@@ -17,13 +16,14 @@ defmodule ExtData.Categories.Processor.ISCO do
     e in [Jason.DecodeError] -> {:error, e}
   end
 
-  @spec normalize(term) :: Category.t()
-  def normalize(%{"id" => id, "name" => name} = node) do
-    children =
-      node
-      |> Map.get("children", [])
-      |> Enum.map(&normalize/1)
-
-    %Category{id: id, name: name, children: children}
-  end
+  @typep json_attrs :: %{id: String.t(), name: String.t(), children: [json_attrs]}
+  @spec normalize(json_attrs) :: Category.t()
+  defp normalize(%{"id" => id, "name" => name, "children" => children})
+       when is_binary(id) and is_binary(name) and is_list(children),
+       do: %Category{
+         id: id,
+         name: name,
+         readonly: false,
+         children: Enum.map(children, &normalize/1)
+       }
 end
